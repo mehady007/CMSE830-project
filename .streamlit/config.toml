@@ -1,0 +1,3 @@
+# Always use the light theme, so the chart colours look the same for every viewer.
+[theme]
+base = "light"

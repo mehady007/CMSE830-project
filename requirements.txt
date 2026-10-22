@@ -1,0 +1,10 @@
+# Runtime dependencies for the Streamlit app (app.py)
+streamlit>=1.50
+pandas>=2.2
+numpy>=1.26
+plotly>=5.24
+
+# Used by the analysis notebook (notebooks/energy_transition_analysis.ipynb)
+matplotlib>=3.8
+seaborn>=0.13
+scipy>=1.11

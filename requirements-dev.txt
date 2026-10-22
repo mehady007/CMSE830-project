@@ -1,0 +1,3 @@
+# Everything in requirements.txt, plus Jupyter to open and re-run the analysis notebook.
+-r requirements.txt
+jupyter>=1.0
