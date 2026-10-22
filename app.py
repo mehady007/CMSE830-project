@@ -3,8 +3,11 @@
 Run with:  streamlit run app.py
 The app is self-contained: the data-preparation functions below are the same as Section 0 of the analysis
 notebook (notebooks/energy_transition_analysis.ipynb), so the app and the notebook show the same numbers.
+It reads the three CSV files from the data/ folder next to this file and downloads any that are missing.
 """
+import shutil
 from pathlib import Path
+from urllib.request import Request, urlopen
 
 import numpy as np
 import pandas as pd
@@ -100,8 +103,48 @@ def load_panel(data_dir=DATA_DIR):
     return build_panel(co2, energy, continents)
 
 
+# Source URLs, the same as in the notebook's data-collection cell.
+DATA_URLS = {
+    "owid-co2-data.csv": "https://raw.githubusercontent.com/owid/co2-data/master/owid-co2-data.csv",
+    "owid-energy-data.csv": "https://raw.githubusercontent.com/owid/energy-data/master/owid-energy-data.csv",
+    "owid-continents.csv": ("https://ourworldindata.org/grapher/continents-according-to-our-world-in-data.csv"
+                            "?v=1&csvType=full&useColumnShortNames=true"),
+}
+
+
+def download_missing_data(data_dir=DATA_DIR):
+    """Download any of the three CSV files that is not in data_dir yet; return the names still missing.
+
+    Each file goes to a temporary ".part" file first, so a broken connection never leaves a half-written CSV.
+    """
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for name, url in DATA_URLS.items():
+        path = data_dir / name
+        if path.exists():
+            continue
+        part = path.with_name(name + ".part")
+        try:
+            # ourworldindata.org refuses Python's default user agent (HTTP 403), so name the app instead.
+            request = Request(url, headers={"User-Agent": "energy-transition-explorer/1.0"})
+            with urlopen(request, timeout=120) as response, open(part, "wb") as out:
+                shutil.copyfileobj(response, out)
+            part.replace(path)
+        except Exception:  # offline or URL changed: reported by the caller
+            part.unlink(missing_ok=True)
+    return [name for name in DATA_URLS if not (data_dir / name).exists()]
+
+
 # --------------------------------------------------------------------------- App settings
 st.set_page_config(page_title="Energy Transition Explorer", layout="wide")
+
+# The repository ships the data; if app.py runs without its data/ folder, fetch the files once.
+if any(not (DATA_DIR / name).exists() for name in DATA_URLS):
+    with st.spinner("Downloading the data from Our World in Data (first run only, about 25 MB)..."):
+        still_missing = download_missing_data()
+    if still_missing:
+        st.error(f"Could not download {', '.join(still_missing)}. Check the internet connection and reload the "
+                 f"page, or copy the CSV files into {DATA_DIR}.")
+        st.stop()
 
 GITHUB_URL = "https://github.com/mehady007/CMSE830-project"
 GDP_LAST_YEAR = 2022  # Maddison GDP data end in 2022

@@ -149,6 +149,11 @@ pip install -r requirements.txt
 streamlit run app.py               # opens http://localhost:8501
 ```
 
+`app.py` needs no other project file: it reads the CSVs from the `data/` folder next to it. If that folder or a
+file in it is missing (for example when `app.py` is copied on its own), the app downloads the three files from Our
+World in Data on its first run (about 25 MB). Freshly downloaded files may give slightly different numbers than the
+October 2026 snapshot in this repository.
+
 **Re-run the analysis notebook** (needs Jupyter). The notebook imports no project code, so it also runs on its own
 outside the repository: put it in any folder, and it uses a `data/` folder next to it (downloading the CSVs if needed)
 and writes `docs/figures/` and `docs/results.json` there.
